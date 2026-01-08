@@ -6,14 +6,28 @@ const authorize = require('../middleware/roleAuth');
 
 const router = express.Router();
 
-// All routes require authentication and admin role
+// All routes require authentication
 router.use(auth);
-router.use(authorize('admin'));
+
+// @route   GET /api/users/doctors
+// @desc    Get all doctors (for appointments)
+// @access  Admin, Receptionist
+router.get('/doctors', authorize('admin', 'receptionist'), async (req, res) => {
+  try {
+    const doctors = await User.find({ role: 'doctor' })
+      .select('-password')
+      .sort({ createdAt: -1 });
+    res.json(doctors);
+  } catch (error) {
+    console.error('Get doctors error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
 
 // @route   GET /api/users
 // @desc    Get all users
 // @access  Admin only
-router.get('/', async (req, res) => {
+router.get('/', authorize('admin'), async (req, res) => {
   try {
     const users = await User.find().select('-password').sort({ createdAt: -1 });
     res.json(users);
@@ -38,6 +52,7 @@ router.post(
       .isIn(['admin', 'doctor', 'receptionist', 'patient'])
       .withMessage('Invalid role'),
   ],
+  authorize('admin'),
   async (req, res) => {
     try {
       const errors = validationResult(req);
@@ -95,6 +110,7 @@ router.put(
       .isIn(['admin', 'doctor', 'receptionist', 'patient'])
       .withMessage('Invalid role'),
   ],
+  authorize('admin'),
   async (req, res) => {
     try {
       const errors = validationResult(req);
@@ -145,7 +161,7 @@ router.put(
 // @route   DELETE /api/users/:id
 // @desc    Delete user
 // @access  Admin only
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authorize('admin'), async (req, res) => {
   try {
     const userId = req.params.id;
 
