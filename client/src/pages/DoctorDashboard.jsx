@@ -89,11 +89,29 @@ function DoctorDashboard() {
     }
   };
 
-  const findPatientName = (id) => {
-    const p = patients.find((pt) => pt.patientID?._id === id || pt.patientID === id || pt._id === id);
-    if (!p) return id;
-    const baseName = p.patientID?.name || p.name || 'Patient';
-    return `${baseName}`;
+  const findPatientName = (value) => {
+    if (!value) return 'Patient';
+
+    // If we got a populated object, try to use its fields directly
+    if (typeof value === 'object') {
+      const directName = value.name;
+      if (directName) return directName;
+    }
+
+    const id = typeof value === 'object' ? value._id : value;
+
+    const p = patients.find(
+      (pt) => pt.patientID?._id === id || pt.patientID === id || pt._id === id,
+    );
+
+    if (p) {
+      const baseName = p.patientID?.name || p.name || 'Patient';
+      return baseName;
+    }
+
+    // Fallback – never return an object to JSX
+    if (typeof value === 'string') return value;
+    return 'Patient';
   };
 
   const formatDate = (date) => new Date(date).toLocaleString();
