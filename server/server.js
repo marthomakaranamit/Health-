@@ -14,10 +14,12 @@ app.use(express.json());
 // Connect to MongoDB
 connectDB();
 
-// Test route
+// Routes
 app.get('/', (req, res) => {
   res.json({ message: 'API is running' });
 });
+
+app.use('/api/auth', require('./routes/auth'));
 
 const PORT = process.env.PORT || 5000;
 
